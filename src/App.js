@@ -1,9 +1,23 @@
+import React, {Component} from 'react'
+import {BrowserRouter as Router, Route, Link, Switch} from 'react-router-dom'
+import Home from './pages/Layout'
+import Login from './pages/Login'
+import Error from './pages/Error'
 
 function App() {
   return (
-    <div className="App">
-      <h1>这是App组件</h1>
-    </div>
+    <Router>
+      <Link to="/login">登录</Link>
+      <Link to="/home">首页</Link>
+
+
+      {/* 配置路由规则 */}
+      <Switch>
+        <Route path='/home' component={Home}></Route>
+        <Route path="/login" component={Login}></Route>
+        <Route component={Error}></Route>
+      </Switch>
+    </Router>
   );
 }
 
