@@ -2,6 +2,7 @@ import React, { Component } from 'react';
 import { Card, Button, Checkbox, Form, Input, message } from 'antd';
 import './index.scss';
 import Logo from 'assets/logo.png';
+import { login } from 'api/user';
 class Login extends Component {
   render() {
     return (
@@ -87,8 +88,20 @@ class Login extends Component {
       </div>
     );
   }
-  onFinish = (values) => {
-    console.log('Success:', values);
+  onFinish = async ({mobile, code}) => {
+    try{
+    const res = await login(mobile, code)
+    console.log(res)
+    //登陆成功
+    //1. 保存token
+    localStorage.setItem('token', res.data.token)
+    //2. 跳转到首页
+    this.props.history.push('/home')
+    //3. 提示信息  
+    alert('登陆成功')
+    }catch(error){
+      alert(error.response.data.message)
+    }
   };
 }
 
