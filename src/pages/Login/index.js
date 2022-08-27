@@ -4,6 +4,9 @@ import './index.scss';
 import Logo from 'assets/logo.png';
 import { login } from 'api/user';
 class Login extends Component {
+  state={
+    loading:false
+  }
   render() {
     return (
       <div className="login">
@@ -79,7 +82,7 @@ class Login extends Component {
             </Form.Item>
 
             <Form.Item>
-              <Button type="primary" htmlType="submit" block>
+              <Button type="primary" htmlType="submit" block loading={this.state.loading}>
                 登录
               </Button>
             </Form.Item>
@@ -90,6 +93,9 @@ class Login extends Component {
   }
   onFinish = async ({mobile, code}) => {
     try{
+      this.setState({
+        loading:true
+      })
     const res = await login(mobile, code)
     console.log(res)
     //登陆成功
@@ -98,9 +104,12 @@ class Login extends Component {
     //2. 跳转到首页
     this.props.history.push('/home')
     //3. 提示信息  
-    alert('登陆成功')
+    message.success('登陆成功', 1, () =>{})
     }catch(error){
-      alert(error.response.data.message)
+      message.error(error.response.data.message, 1)
+      this.setState({
+        loading:false
+      })
     }
   };
 }
