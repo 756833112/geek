@@ -1,4 +1,7 @@
+import { message } from 'antd';
 import axios from 'axios'
+import {getToken, hasToken, removeToken} from 'utils/storage'
+import history from 'utils/history'
 
 const instance = axios.create({
     baseURL:'http://geek.itheima.net/v1_0/',
@@ -11,6 +14,9 @@ const instance = axios.create({
 instance.interceptors.request.use(
   function (config) {
     // 在发送请求之前做些什么
+    if(hasToken()){
+      config.headers.Authorization = `Bearer ${getToken()}`
+    }
     return config;
   },
   function (error) {
@@ -27,6 +33,14 @@ instance.interceptors.response.use(
   },
   function (error) {
     // 对响应错误做点什么
+    if(error.response.status === 401){
+      removeToken()
+
+      message.warn('登陆过期了')
+
+      // window.location.href= '/login'
+      history.history.push('/login')
+    }
     return Promise.reject(error);
   }
 );

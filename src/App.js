@@ -1,19 +1,22 @@
 import React, {Component} from 'react'
-import {BrowserRouter as Router, Route, Link, Switch} from 'react-router-dom'
+import {Router, Route, Link, Switch} from 'react-router-dom'
 import Home from './pages/Layout'
 import Login from './pages/Login'
 import Error from './pages/Error'
+import AuthRoute from 'component/AuthRoute'
+import history from 'utils/history'
+console.log('history',history);
 
 function App() {
   return (
-    <Router>
+    <Router history={history.history}>
       
 
 
       {/* 配置路由规则 */}
       <Switch>
-        <Route path='/home' component={Home}></Route>
-        <Route path="/login" component={Login}></Route>
+        <AuthRoute path='/home' component={Home}></AuthRoute>
+        <Route path="/login" render={(props) => <Login {...props}/> }></Route>
         <Route component={Error}></Route>
       </Switch>
     </Router>

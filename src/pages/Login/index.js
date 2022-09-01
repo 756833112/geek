@@ -1,15 +1,18 @@
 import React, { Component } from 'react';
 import { Card, Button, Checkbox, Form, Input, message } from 'antd';
-import './index.scss';
+import styles from './index.module.scss';
 import Logo from 'assets/logo.png';
 import { login } from 'api/user';
+import 'utils/storage'
+import { setToken } from 'utils/storage';
 class Login extends Component {
   state={
     loading:false
   }
   render() {
     return (
-      <div className="login">
+      <div className={styles.login}>
+        {console.log(styles)}
         <Card className="loginContainer">
           <img src={Logo} />
 
@@ -100,9 +103,14 @@ class Login extends Component {
     console.log(res)
     //登陆成功
     //1. 保存token
-    localStorage.setItem('token', res.data.token)
-    //2. 跳转到首页
-    this.props.history.push('/home')
+    setToken(res.data.token)
+    //2. 跳转到首页 并且做出判断 返回到 location 下的 from 属性值的地址 这个地址在封装的时候就写好了
+    const {state} = this.props.location
+    if(state){
+      this.props.history.push(state.from)
+    }else{
+      this.props.history.push('/home')
+    }
     //3. 提示信息  
     message.success('登陆成功', 1, () =>{})
     }catch(error){

@@ -1,0 +1,40 @@
+.layout{
+    background-color: pink;
+
+    :global{
+        height: 100vh;
+        .ant-layout{
+            height: 100%;
+        }
+        .ant-layout-header{
+            padding: 0;
+        }
+
+            .logo {
+                float: left;
+                width: 200px;
+                height: 60px;
+                background: url(~assets/logo.png);
+                background-size: cover;
+                
+            }
+        
+            .ant-row-rtl .logo {
+                float: right;
+                margin: 16px 0 16px 24px;
+            }
+        
+            .site-layout-background {
+                background: #fff;
+            }
+            .user{
+                float: right;
+                color: white;
+                margin-right: 38px;
+            }
+            .user span{
+                margin-left: 15px;
+                cursor: pointer;
+            }
+    }
+}
