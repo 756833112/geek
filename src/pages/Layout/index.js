@@ -47,9 +47,10 @@ const items2 = [UserOutlined, LaptopOutlined, NotificationOutlined].map(
 );
 
 class LayoutComponent extends Component {
-  state={
-    profile:{},
-  }
+  state = {
+    profile: {},
+    selectedKey: this.props.location.pathname,
+  };
   render() {
     return (
       <div className={styles.layout}>
@@ -75,7 +76,7 @@ class LayoutComponent extends Component {
               <Menu
                 theme="dark"
                 mode="inline"
-                defaultSelectedKeys={[this.props.location.pathname]}
+                selectedKeys={[this.state.selectedKey]}
                 defaultOpenKeys={['sub1']}
                 style={{
                   height: '100%',
@@ -97,6 +98,7 @@ class LayoutComponent extends Component {
             <Layout
               style={{
                 padding: '24px',
+                overflow: 'auto',
               }}
             >
               <Content className="site-layout-background">
@@ -104,7 +106,17 @@ class LayoutComponent extends Component {
                 <Switch>
                   <Route exact path="/home" component={Home}></Route>
                   <Route path="/home/list" component={List}></Route>
-                  <Route path="/home/publish" component={Publish}></Route>
+                  <Route
+                    exact
+                    path="/home/publish"
+                    component={Publish}
+                    key="add"
+                  ></Route>
+                  <Route
+                    path="/home/publish/:id"
+                    component={Publish}
+                    key="edit"
+                  ></Route>
                 </Switch>
               </Content>
             </Layout>
@@ -113,20 +125,32 @@ class LayoutComponent extends Component {
       </div>
     );
   }
-  onConfirm = () =>{
-    removeToken()
-
-    this.props.history.push('/login')
-
-    message.success('退出成功')
+  componentDidUpdate(prevProps) {
+    if (this.props.location.pathname !== prevProps.location.pathname) {
+      let pathname = this.props.location.pathname;
+      if (pathname.startsWith('/home/publish')){
+        pathname = '/home/publish'
+      }
+        this.setState({
+          selectedKey: pathname,
+        });
+    }
   }
+
+  onConfirm = () => {
+    removeToken();
+
+    this.props.history.push('/login');
+
+    message.success('退出成功');
+  };
   //钩子函数调接口的用户信息
-  async componentDidMount (){
-    const res = await getUserprofile()
-    console.log(res)
+  async componentDidMount() {
+    const res = await getUserprofile();
+    console.log(res);
     this.setState({
-      profile: res.data
-    })
+      profile: res.data,
+    });
   }
 }
 
