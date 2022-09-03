@@ -10,91 +10,108 @@ import {
   Table,
   Tag,
   Space,
+  Modal,
 } from 'antd';
 import { Link } from 'react-router-dom';
+import {
+  DeleteOutlined,
+  EditOutlined,
+  ExclamationCircleOutlined,
+} from '@ant-design/icons';
 import { ArticleStatus } from 'api/constants';
-import { getChannels } from 'api/channel';
-import { getArticles } from 'api/article'
-const { Option } = Select;
+import { getArticles } from 'api/article';
+import { delArticle } from 'api/article';
+import defaultImg from 'assets/defaultImage.png';
+import Channels from 'pages/Channels';
 class ArticleList extends Component {
   columns = [
     {
-      title: 'Name',
-      dataIndex: 'name',
-      key: 'name',
-      render: (text) => <a>{text}</a>,
+      title: '封面',
+      dataIndex: '',
+      render(data) {
+        if (data.cover.type === 0) {
+          //无图
+          return (
+            <img
+              src={defaultImg}
+              style={{ width: 200, height: 120, objectFit: 'cover' }}
+            />
+          );
+        } else {
+          return (
+            <img
+              src={data.cover.images[0]}
+              style={{ width: 200, height: 120, objectFit: 'cover' }}
+            />
+          );
+        }
+      },
     },
     {
-      title: 'Age',
-      dataIndex: 'age',
-      key: 'age',
+      title: '标题',
+      dataIndex: 'title',
     },
     {
-      title: 'Address',
-      dataIndex: 'address',
-      key: 'address',
+      title: '状态',
+      dataIndex: 'status',
+      render(status) {
+        const obj = ArticleStatus.find((item) => item.id === status);
+        return <Tag color={obj.color}>{obj.name}</Tag>;
+      },
     },
-    {
-      title: 'Tags',
-      key: 'tags',
-      dataIndex: 'tags',
-      render: (_, { tags }) => (
-        <>
-          {tags.map((tag) => {
-            let color = tag.length > 5 ? 'geekblue' : 'green';
 
-            if (tag === 'loser') {
-              color = 'volcano';
-            }
-
-            return (
-              <Tag color={color} key={tag}>
-                {tag.toUpperCase()}
-              </Tag>
-            );
-          })}
-        </>
-      ),
+    {
+      title: '发布时间',
+      dataIndex: 'pubdate',
     },
     {
-      title: 'Action',
-      key: 'action',
-      render: (_, record) => (
-        <Space size="middle">
-          <a>Invite {record.name}</a>
-          <a>Delete</a>
-        </Space>
-      ),
+      title: '阅读数',
+      dataIndex: 'read_count',
+    },
+    {
+      title: '评论数',
+      dataIndex: 'comment_count',
+    },
+    {
+      title: '点赞数',
+      dataIndex: 'like_count',
+    },
+    {
+      title: '操作',
+      render: (data) => {
+        return (
+          <Space>
+            <Button
+              type="primary"
+              shape="circle"
+              onClick={() => this.handleEdit(data.id)}
+              icon={<EditOutlined></EditOutlined>}
+            ></Button>
+            <Button
+              type="primary"
+              danger
+              shape="circle"
+              icon={<DeleteOutlined></DeleteOutlined>}
+              onClick={() => this.handleDelete(data.id)}
+            ></Button>
+          </Space>
+        );
+      },
     },
   ];
-  data = [
-    {
-      key: '1',
-      name: 'John Brown',
-      age: 32,
-      address: 'New York No. 1 Lake Park',
-      tags: ['nice', 'developer'],
-    },
-    {
-      key: '2',
-      name: 'Jim Green',
-      age: 42,
-      address: 'London No. 1 Lake Park',
-      tags: ['loser'],
-    },
-    {
-      key: '3',
-      name: 'Joe Black',
-      age: 32,
-      address: 'Sidney No. 1 Lake Park',
-      tags: ['cool', 'teacher'],
-    },
-  ];
+  //存放文章列表参数
+  reqParams = {
+    page: 1,
+    per_page: 10,
+  };
+
   state = {
     channels: [],
     articles: {},
   };
+
   render() {
+    const { total_count, results, per_page, page } = this.state.articles;
     return (
       <div>
         <Card
@@ -121,13 +138,7 @@ class ArticleList extends Component {
 
             {/* 频道 */}
             <Form.Item label="频道" name="channel_id">
-              <Select style={{ width: 200 }} placeholder="请选择文章频道">
-                {this.state.channels.map((item) => (
-                  <Option key={item.id} value={item.id}>
-                    {item.name}
-                  </Option>
-                ))}
-              </Select>
+              <Channels></Channels>
             </Form.Item>
 
             {/* 日期选择 */}
@@ -145,36 +156,82 @@ class ArticleList extends Component {
         </Card>
 
         {/* 表单 */}
-        <Card title={'根据筛选条件共查询到xxx条结果'}>
-          {/* 表格 */}
-          <Table columns={this.columns} dataSource={this.data}></Table>
+
+        <Card title={`根据筛选条件共查询到${total_count}条结果`}>
+          <Table
+            columns={this.columns}
+            dataSource={results}
+            rowKey="id"
+            pagination={{
+              position: ['bottomCenter'],
+              total: total_count,
+              pageSize: per_page,
+              current: page,
+              onChange: this.onChange,
+            }}
+          ></Table>
         </Card>
       </div>
     );
   }
+
+  handleEdit = (id) => {
+    this.props.history.push(`/home/publish/${id}`)
+  };
+  onChange = (page, pageSize) => {
+    console.log(page, pageSize);
+    this.reqParams.page = page;
+    this.reqParams.per_page = pageSize;
+    this.getArticleList();
+  };
+
   async componentDidMount() {
-    this.getChannelList()
-
-    this.getArticleList()
+    this.getArticleList();
   }
 
-  // 频道数据接口
-  async getChannelList(){
-    const res = await getChannels()
-    this.setState({
-      channels: res.data.channels
-    })
-  }
   //文章数据接口
-  async getArticleList(){
-    const res = await getArticles()
+  async getArticleList() {
+    const res = await getArticles(this.reqParams);
     this.setState({
-      articles: res.data
-    })
+      articles: res.data,
+    });
   }
 
-  onFinish = (values) => {
-    console.log(values);
+  onFinish = ({ status, channel_id, date }) => {
+    if (status !== -1) {
+      this.reqParams.status = status;
+    } else {
+      delete this.reqParams.status;
+    }
+    if (channel_id !== undefined) {
+      this.reqParams.channel_id = channel_id;
+    } else {
+      delete this.reqParams.channel_id;
+    }
+    if (date) {
+      this.reqParams.begin_pubdate = date[0].format('YYYY-MM-DD');
+      this.reqParams.end_pubdate = date[1].format('YYYY-MM-DD');
+    } else {
+      delete this.reqParams.begin_pubdate;
+      delete this.reqParams.end_pubdate;
+    }
+    this.reqParams.page = 1;
+    this.getArticleList();
+    console.log(this.reqParams);
+  };
+
+  //删除按钮
+  handleDelete = (id) => {
+    console.log(id);
+    Modal.confirm({
+      title: '您确定要删除吗？',
+      icon: <ExclamationCircleOutlined></ExclamationCircleOutlined>,
+      onOk: async () => {
+        //发送请求删除文章
+        await delArticle(id);
+        this.getArticleList();
+      },
+    });
   };
 }
 
